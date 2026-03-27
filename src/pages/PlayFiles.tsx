@@ -2,6 +2,8 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
