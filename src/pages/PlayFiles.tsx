@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive } from "lucide-react";
+import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -136,30 +136,30 @@ const PlayFiles = () => {
 
     // Executable / runnable file types with dedicated previews
     const fileTypeInfo: Record<string, { icon: React.ReactNode; label: string; description: string; buttonText: string }> = {
-      apk: {
-        icon: <Smartphone className="w-20 h-20 text-primary" />,
-        label: "Android App Package (.apk)",
-        description: "This is an Android application. Download it and transfer to your Android device to install.",
-        buttonText: "Download APK",
-      },
-      exe: {
-        icon: <Monitor className="w-20 h-20 text-primary" />,
-        label: "Windows Executable (.exe)",
-        description: "This is a Windows program. Download it and run on your Windows PC.",
-        buttonText: "Download EXE",
-      },
-      run: {
-        icon: <Play className="w-20 h-20 text-primary" />,
-        label: "Linux Executable (.run)",
-        description: "This is a Linux executable. Download it and run on your Linux system with chmod +x.",
-        buttonText: "Download RUN",
-      },
-      zip: {
-        icon: <Archive className="w-20 h-20 text-primary" />,
-        label: "ZIP Archive (.zip)",
-        description: "This is a compressed archive. Download and extract it on your device.",
-        buttonText: "Download ZIP",
-      },
+      // Executables & installers
+      apk: { icon: <Smartphone className="w-20 h-20 text-primary" />, label: "Android App Package (.apk)", description: "Android application. Download and install on your Android device.", buttonText: "Download APK" },
+      exe: { icon: <Monitor className="w-20 h-20 text-primary" />, label: "Windows Executable (.exe)", description: "Windows program. Download and run on your Windows PC.", buttonText: "Download EXE" },
+      msi: { icon: <Monitor className="w-20 h-20 text-primary" />, label: "Windows Installer (.msi)", description: "Windows installer package. Download and run on your Windows PC.", buttonText: "Download MSI" },
+      run: { icon: <Play className="w-20 h-20 text-primary" />, label: "Linux Executable (.run)", description: "Linux executable. Download and run with chmod +x on Linux.", buttonText: "Download RUN" },
+      deb: { icon: <Package className="w-20 h-20 text-primary" />, label: "Debian Package (.deb)", description: "Linux Debian/Ubuntu package. Install with dpkg -i.", buttonText: "Download DEB" },
+      rpm: { icon: <Package className="w-20 h-20 text-primary" />, label: "RPM Package (.rpm)", description: "Linux RPM package. Install with rpm -i or dnf.", buttonText: "Download RPM" },
+      dmg: { icon: <Monitor className="w-20 h-20 text-primary" />, label: "macOS Disk Image (.dmg)", description: "macOS application image. Download and open on your Mac.", buttonText: "Download DMG" },
+      app: { icon: <Monitor className="w-20 h-20 text-primary" />, label: "macOS Application (.app)", description: "macOS application. Download and run on your Mac.", buttonText: "Download APP" },
+      // Archives
+      zip: { icon: <Archive className="w-20 h-20 text-primary" />, label: "ZIP Archive (.zip)", description: "Compressed archive. Download and extract on your device.", buttonText: "Download ZIP" },
+      rar: { icon: <Archive className="w-20 h-20 text-primary" />, label: "RAR Archive (.rar)", description: "Compressed archive. Download and extract with WinRAR or 7-Zip.", buttonText: "Download RAR" },
+      "7z": { icon: <Archive className="w-20 h-20 text-primary" />, label: "7-Zip Archive (.7z)", description: "Compressed archive. Download and extract with 7-Zip.", buttonText: "Download 7Z" },
+      tar: { icon: <Archive className="w-20 h-20 text-primary" />, label: "TAR Archive (.tar)", description: "Tape archive. Download and extract on your device.", buttonText: "Download TAR" },
+      gz: { icon: <Archive className="w-20 h-20 text-primary" />, label: "GZip Archive (.gz)", description: "GZip compressed file. Download and extract on your device.", buttonText: "Download GZ" },
+      iso: { icon: <HardDrive className="w-20 h-20 text-primary" />, label: "Disc Image (.iso)", description: "Disc image file. Mount or burn to a disc.", buttonText: "Download ISO" },
+      // Documents
+      doc: { icon: <FileText className="w-20 h-20 text-primary" />, label: "Word Document (.doc)", description: "Microsoft Word document. Download and open with Word.", buttonText: "Download DOC" },
+      docx: { icon: <FileText className="w-20 h-20 text-primary" />, label: "Word Document (.docx)", description: "Microsoft Word document. Download and open with Word.", buttonText: "Download DOCX" },
+      xls: { icon: <Table className="w-20 h-20 text-primary" />, label: "Excel Spreadsheet (.xls)", description: "Microsoft Excel spreadsheet. Download and open with Excel.", buttonText: "Download XLS" },
+      xlsx: { icon: <Table className="w-20 h-20 text-primary" />, label: "Excel Spreadsheet (.xlsx)", description: "Microsoft Excel spreadsheet. Download and open with Excel.", buttonText: "Download XLSX" },
+      pptx: { icon: <Presentation className="w-20 h-20 text-primary" />, label: "PowerPoint (.pptx)", description: "Microsoft PowerPoint presentation. Download and open.", buttonText: "Download PPTX" },
+      ppt: { icon: <Presentation className="w-20 h-20 text-primary" />, label: "PowerPoint (.ppt)", description: "Microsoft PowerPoint presentation. Download and open.", buttonText: "Download PPT" },
+      epub: { icon: <BookOpen className="w-20 h-20 text-primary" />, label: "eBook (.epub)", description: "Electronic book. Open with an eBook reader app.", buttonText: "Download EPUB" },
     };
 
     const info = ext ? fileTypeInfo[ext] : null;
