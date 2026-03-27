@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize } from "lucide-react";
+import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -132,13 +132,43 @@ const PlayFiles = () => {
       return <iframe src={fileUrl} className="w-full h-full border-0" title={file.name} sandbox="allow-scripts" />;
     }
 
+    // APK files
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === "apk") {
+      return (
+        <div className="flex flex-col items-center gap-6 text-center p-8">
+          <Smartphone className="w-20 h-20 text-primary" />
+          <div>
+            <p className="text-foreground font-bold text-xl">{file.name}</p>
+            <p className="text-muted-foreground mt-1">{formatSize(file.size)}</p>
+            <p className="text-sm text-muted-foreground mt-2">Android App Package (.apk)</p>
+          </div>
+          <p className="text-muted-foreground text-sm max-w-md">
+            This is an Android application. Download it and transfer to your Android device to install.
+          </p>
+          <a href={fileUrl} download={file.name}>
+            <Button className="gap-2" size="lg">
+              <Download className="w-5 h-5" />
+              Download APK
+            </Button>
+          </a>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex flex-col items-center gap-4 text-muted-foreground">
-        <FileIcon className="w-20 h-20" />
-        <p className="text-foreground font-medium">{file.name}</p>
-        <p>Preview not available for this file type.</p>
+      <div className="flex flex-col items-center gap-6 text-center p-8">
+        <Package className="w-20 h-20 text-muted-foreground" />
+        <div>
+          <p className="text-foreground font-bold text-xl">{file.name}</p>
+          <p className="text-muted-foreground mt-1">{formatSize(file.size)}</p>
+          {ext && <p className="text-sm text-muted-foreground mt-2">.{ext} file</p>}
+        </div>
         <a href={fileUrl} download={file.name}>
-          <Button variant="outline">Download File</Button>
+          <Button className="gap-2" size="lg">
+            <Download className="w-5 h-5" />
+            Download File
+          </Button>
         </a>
       </div>
     );
