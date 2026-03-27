@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package } from "lucide-react";
+import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -132,24 +132,54 @@ const PlayFiles = () => {
       return <iframe src={fileUrl} className="w-full h-full border-0" title={file.name} sandbox="allow-scripts" />;
     }
 
-    // APK files
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext === "apk") {
+
+    // Executable / runnable file types with dedicated previews
+    const fileTypeInfo: Record<string, { icon: React.ReactNode; label: string; description: string; buttonText: string }> = {
+      apk: {
+        icon: <Smartphone className="w-20 h-20 text-primary" />,
+        label: "Android App Package (.apk)",
+        description: "This is an Android application. Download it and transfer to your Android device to install.",
+        buttonText: "Download APK",
+      },
+      exe: {
+        icon: <Monitor className="w-20 h-20 text-primary" />,
+        label: "Windows Executable (.exe)",
+        description: "This is a Windows program. Download it and run on your Windows PC.",
+        buttonText: "Download EXE",
+      },
+      run: {
+        icon: <Play className="w-20 h-20 text-primary" />,
+        label: "Linux Executable (.run)",
+        description: "This is a Linux executable. Download it and run on your Linux system with chmod +x.",
+        buttonText: "Download RUN",
+      },
+      zip: {
+        icon: <Archive className="w-20 h-20 text-primary" />,
+        label: "ZIP Archive (.zip)",
+        description: "This is a compressed archive. Download and extract it on your device.",
+        buttonText: "Download ZIP",
+      },
+    };
+
+    const info = ext ? fileTypeInfo[ext] : null;
+
+    if (info) {
       return (
         <div className="flex flex-col items-center gap-6 text-center p-8">
-          <Smartphone className="w-20 h-20 text-primary" />
+          {info.icon}
           <div>
             <p className="text-foreground font-bold text-xl">{file.name}</p>
             <p className="text-muted-foreground mt-1">{formatSize(file.size)}</p>
-            <p className="text-sm text-muted-foreground mt-2">Android App Package (.apk)</p>
+            <p className="text-sm text-muted-foreground mt-2">{info.label}</p>
           </div>
-          <p className="text-muted-foreground text-sm max-w-md">
-            This is an Android application. Download it and transfer to your Android device to install.
-          </p>
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 max-w-md">
+            <p className="text-sm text-foreground">{info.description}</p>
+          </div>
           <a href={fileUrl} download={file.name}>
             <Button className="gap-2" size="lg">
               <Download className="w-5 h-5" />
-              Download APK
+              {info.buttonText}
             </Button>
           </a>
         </div>
@@ -158,7 +188,7 @@ const PlayFiles = () => {
 
     return (
       <div className="flex flex-col items-center gap-6 text-center p-8">
-        <Package className="w-20 h-20 text-muted-foreground" />
+        <HardDrive className="w-20 h-20 text-muted-foreground" />
         <div>
           <p className="text-foreground font-bold text-xl">{file.name}</p>
           <p className="text-muted-foreground mt-1">{formatSize(file.size)}</p>
