@@ -48,27 +48,34 @@ const PlayFiles = () => {
       const progress = Math.min((currentStep / steps) * 100, 100);
       setCheckProgress(progress);
 
+      const fileExt = selectedFile.name.split('.').pop()?.toLowerCase();
+      const isApk = fileExt === 'apk';
+      const sizeLimit = isApk ? MAX_APK_SIZE_BYTES : MAX_SIZE_BYTES;
+      const sizeLimitLabel = isApk ? '100MB' : '1GB (1000MB)';
+
       if (currentStep <= 5) {
         setAiMessage("AI is scanning your file...");
       } else if (currentStep <= 10) {
         setAiMessage(`Checking file size: ${formatSize(selectedFile.size)}...`);
       } else if (currentStep <= 15) {
-        setAiMessage("Verifying file is within 1GB limit...");
+        setAiMessage(isApk
+          ? "Verifying APK is within 100MB limit..."
+          : "Verifying file is within 1GB limit...");
       }
 
       if (currentStep >= steps) {
         clearInterval(interval);
 
-        if (selectedFile.size > MAX_SIZE_BYTES) {
+        if (selectedFile.size > sizeLimit) {
           setStatus("rejected");
           setAiMessage(
-            `❌ File too large! Your file is ${formatSize(selectedFile.size)} which exceeds the 1GB (1000MB) limit. Please upload a smaller file.`
+            `❌ File too large! Your file is ${formatSize(selectedFile.size)} which exceeds the ${sizeLimitLabel} limit${isApk ? ' for APK files' : ''}. Please upload a smaller file.`
           );
-          toast.error("File exceeds 1GB limit");
+          toast.error(`File exceeds ${sizeLimitLabel} limit`);
         } else {
           setStatus("approved");
           setAiMessage(
-            `✅ File approved! Size: ${formatSize(selectedFile.size)} — within the 1GB limit. Ready to download and preview.`
+            `✅ File approved! Size: ${formatSize(selectedFile.size)} — within the ${sizeLimitLabel} limit. Ready to download and preview.`
           );
           toast.success("File approved by AI");
         }
