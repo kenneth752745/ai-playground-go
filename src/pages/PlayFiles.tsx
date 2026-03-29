@@ -105,34 +105,44 @@ const PlayFiles = () => {
   const getPreviewContent = () => {
     if (!file || !fileUrl) return null;
     const type = file.type;
+    const ext = file.name.split('.').pop()?.toLowerCase();
 
-    if (type.startsWith("image/")) {
+    // Image preview
+    const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"];
+    if (type.startsWith("image/") || (ext && imageExts.includes(ext))) {
       return <img src={fileUrl} alt={file.name} className="max-w-full max-h-full object-contain" />;
     }
-    if (type.startsWith("video/")) {
+    // Video preview
+    const videoExts = ["mp4", "webm", "ogg", "mov", "avi", "mkv"];
+    if (type.startsWith("video/") || (ext && videoExts.includes(ext))) {
       return <video src={fileUrl} controls autoPlay className="max-w-full max-h-full" />;
     }
-    if (type.startsWith("audio/")) {
+    // Audio preview
+    const audioExts = ["mp3", "wav", "ogg", "flac", "aac", "m4a"];
+    if (type.startsWith("audio/") || (ext && audioExts.includes(ext))) {
       return (
         <div className="flex flex-col items-center gap-4">
-          <FileIcon className="w-20 h-20 text-muted-foreground" />
+          <Music className="w-20 h-20 text-primary" />
           <p className="text-foreground font-medium">{file.name}</p>
           <audio src={fileUrl} controls autoPlay className="w-full max-w-md" />
         </div>
       );
     }
-    if (type === "application/pdf") {
+    // PDF preview
+    if (type === "application/pdf" || ext === "pdf") {
       return <iframe src={fileUrl} className="w-full h-full border-0" title={file.name} />;
     }
-    if (type.startsWith("text/") || type === "application/json" || type === "application/javascript") {
+    // HTML files - full preview with scripts allowed
+    const htmlExts = ["html", "htm"];
+    if (type === "text/html" || (ext && htmlExts.includes(ext))) {
+      return <iframe src={fileUrl} className="w-full h-full border-0" title={file.name} sandbox="allow-scripts allow-same-origin" />;
+    }
+    // Text/code files
+    const textExts = ["txt", "md", "json", "xml", "csv", "js", "ts", "tsx", "jsx", "css", "py", "java", "c", "cpp", "h", "yaml", "yml", "toml", "ini", "cfg", "log", "sh", "bat"];
+    if (type.startsWith("text/") || type === "application/json" || type === "application/javascript" || (ext && textExts.includes(ext))) {
       return <iframe src={fileUrl} className="w-full h-full border-0 bg-background" title={file.name} />;
     }
-    // HTML files
-    if (type === "text/html") {
-      return <iframe src={fileUrl} className="w-full h-full border-0" title={file.name} sandbox="allow-scripts" />;
-    }
 
-    const ext = file.name.split('.').pop()?.toLowerCase();
 
     // Executable / runnable file types with dedicated previews
     const fileTypeInfo: Record<string, { icon: React.ReactNode; label: string; description: string; buttonText: string }> = {
