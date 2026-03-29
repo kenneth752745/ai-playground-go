@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const MAX_SIZE_BYTES = 1_000_000_000; // 1GB = 1000MB
+const MAX_APK_SIZE_BYTES = 100_000_000; // 100MB for APK files
 
 type FileStatus = "idle" | "checking" | "approved" | "rejected" | "previewing";
 
