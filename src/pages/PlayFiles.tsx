@@ -51,7 +51,7 @@ const PlayFiles = () => {
       const fileExt = selectedFile.name.split('.').pop()?.toLowerCase();
       const isApk = fileExt === 'apk';
       const sizeLimit = isApk ? MAX_APK_SIZE_BYTES : MAX_SIZE_BYTES;
-      const sizeLimitLabel = isApk ? '100MB' : '1GB (1000MB)';
+      const sizeLimitLabel = isApk ? '1GB (1000MB)' : '1GB (1000MB)';
 
       if (currentStep <= 5) {
         setAiMessage("AI is scanning your file...");
@@ -59,7 +59,7 @@ const PlayFiles = () => {
         setAiMessage(`Checking file size: ${formatSize(selectedFile.size)}...`);
       } else if (currentStep <= 15) {
         setAiMessage(isApk
-          ? "Verifying APK is within 100MB limit..."
+          ? "Verifying APK is within 1GB (1000MB) limit..."
           : "Verifying file is within 1GB limit...");
       }
 
