@@ -143,7 +143,6 @@ const PlayFiles = () => {
       return <iframe src={fileUrl} className="w-full h-full border-0 bg-background" title={file.name} />;
     }
 
-    const ext = file.name.split('.').pop()?.toLowerCase();
 
     // Executable / runnable file types with dedicated previews
     const fileTypeInfo: Record<string, { icon: React.ReactNode; label: string; description: string; buttonText: string }> = {
