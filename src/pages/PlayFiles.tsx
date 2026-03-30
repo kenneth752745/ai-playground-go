@@ -10,7 +10,7 @@ import JSZip from "jszip";
 const MAX_SIZE_BYTES = 1_000_000_000; // 1GB = 1000MB
 const MAX_APK_SIZE_BYTES = 1_000_000_000; // 1GB (1000MB) for APK files
 
-type FileStatus = "idle" | "checking" | "approved" | "rejected" | "previewing";
+type FileStatus = "idle" | "checking" | "approved" | "rejected" | "previewing" | "converting";
 
 const formatSize = (bytes: number) => {
   if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(2)} GB`;
