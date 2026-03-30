@@ -123,6 +123,129 @@ const PlayFiles = () => {
     }
   };
 
+  const handleDownloadFile = () => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Download started!");
+  };
+
+  const handleConvertToHtml = async () => {
+    if (!file) return;
+    setStatus("converting");
+    setConvertProgress(0);
+    setConvertMessage("AI is reading your file...");
+
+    const totalSteps = 60; // ~1 minute (1 step per second)
+    let step = 0;
+
+    const messages = [
+      { at: 0, msg: "AI is reading your file..." },
+      { at: 5, msg: "Analyzing file structure..." },
+      { at: 12, msg: "Identifying file type and content..." },
+      { at: 20, msg: "Building HTML template..." },
+      { at: 30, msg: "Embedding file content into HTML..." },
+      { at: 40, msg: "Styling the HTML preview page..." },
+      { at: 50, msg: "Adding download functionality..." },
+      { at: 55, msg: "Finalizing HTML file..." },
+    ];
+
+    const interval = setInterval(async () => {
+      step++;
+      const progress = Math.min((step / totalSteps) * 100, 100);
+      setConvertProgress(progress);
+
+      const currentMsg = [...messages].reverse().find(m => step >= m.at);
+      if (currentMsg) setConvertMessage(currentMsg.msg);
+
+      if (step >= totalSteps) {
+        clearInterval(interval);
+
+        try {
+          const base64 = await fileToBase64(file);
+          const ext = file.name.split('.').pop()?.toLowerCase() || '';
+          const htmlContent = generateHtmlFile(file.name, file.type, ext, file.size, base64);
+
+          const blob = new Blob([htmlContent], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.name.replace(/\.[^.]+$/, '') + '.html';
+          a.click();
+          URL.revokeObjectURL(url);
+
+          setConvertMessage("✅ HTML file generated and downloaded!");
+          toast.success("HTML file downloaded!");
+          setTimeout(() => setStatus("approved"), 2000);
+        } catch {
+          setConvertMessage("❌ Failed to convert file to HTML.");
+          toast.error("Conversion failed");
+          setTimeout(() => setStatus("approved"), 2000);
+        }
+      }
+    }, 1000);
+  };
+
+  const fileToBase64 = (f: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    });
+  };
+
+  const generateHtmlFile = (name: string, mimeType: string, ext: string, size: number, dataUrl: string): string => {
+    const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"];
+    const videoExts = ["mp4", "webm", "ogg", "mov"];
+    const audioExts = ["mp3", "wav", "ogg", "flac", "aac", "m4a"];
+
+    let contentHtml = '';
+    if (mimeType.startsWith("image/") || imageExts.includes(ext)) {
+      contentHtml = `<img src="${dataUrl}" alt="${name}" style="max-width:100%;max-height:80vh;border-radius:8px;" />`;
+    } else if (mimeType.startsWith("video/") || videoExts.includes(ext)) {
+      contentHtml = `<video src="${dataUrl}" controls autoplay style="max-width:100%;max-height:80vh;border-radius:8px;"></video>`;
+    } else if (mimeType.startsWith("audio/") || audioExts.includes(ext)) {
+      contentHtml = `<div style="text-align:center;"><p style="font-size:48px;">🎵</p><p>${name}</p><audio src="${dataUrl}" controls autoplay style="width:100%;max-width:500px;"></audio></div>`;
+    } else if (ext === "pdf") {
+      contentHtml = `<iframe src="${dataUrl}" style="width:100%;height:80vh;border:none;border-radius:8px;"></iframe>`;
+    } else {
+      contentHtml = `<div style="text-align:center;padding:40px;"><p style="font-size:48px;">📄</p><p style="font-size:20px;font-weight:bold;">${name}</p><p>${formatSize(size)}</p><a href="${dataUrl}" download="${name}" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3b82f6;color:white;border-radius:8px;text-decoration:none;font-weight:bold;">Download File</a></div>`;
+    }
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${name} - Preview</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#fafafa;min-height:100vh;display:flex;flex-direction:column;}
+header{padding:16px 24px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;background:#111;}
+header h1{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+header span{font-size:12px;color:#888;}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;}
+.download-btn{display:inline-block;margin-top:16px;padding:10px 20px;background:#3b82f6;color:white;border-radius:6px;text-decoration:none;font-size:14px;}
+.download-btn:hover{background:#2563eb;}
+</style>
+</head>
+<body>
+<header>
+<h1>${name}</h1>
+<span>${formatSize(size)}</span>
+</header>
+<main>
+${contentHtml}
+</main>
+</body>
+</html>`;
+  };
+
   const handleReset = () => {
     if (fileUrl) URL.revokeObjectURL(fileUrl);
     setFile(null);
@@ -132,6 +255,8 @@ const PlayFiles = () => {
     setAiMessage("");
     setIsFullscreen(false);
     setZipEntries([]);
+    setConvertProgress(0);
+    setConvertMessage("");
   };
 
   const getPreviewContent = () => {
