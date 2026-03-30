@@ -529,14 +529,43 @@ ${contentHtml}
 
             {/* Actions */}
             {status === "approved" && (
-              <div className="flex gap-3">
-                <Button className="flex-1 gap-2" onClick={handleRunPreview}>
-                  <Maximize className="w-4 h-4" />
-                  Download & Run Preview
-                </Button>
-                <Button variant="outline" onClick={handleReset}>
-                  Upload Another
-                </Button>
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <Button className="flex-1 gap-2" onClick={handleRunPreview}>
+                    <Maximize className="w-4 h-4" />
+                    Preview
+                  </Button>
+                  <Button variant="outline" className="flex-1 gap-2" onClick={handleDownloadFile}>
+                    <Download className="w-4 h-4" />
+                    Download File
+                  </Button>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="secondary" className="flex-1 gap-2" onClick={handleConvertToHtml}>
+                    <Code className="w-4 h-4" />
+                    Download as HTML
+                  </Button>
+                  <Button variant="ghost" onClick={handleReset}>
+                    Upload Another
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Converting to HTML */}
+            {status === "converting" && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Converting to HTML...</span>
+                </div>
+                <Progress value={convertProgress} className="h-2" />
+                <div className="p-4 rounded-lg text-sm bg-muted text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <Loader2 className="w-4 h-4 mt-0.5 shrink-0 animate-spin" />
+                    <p>{convertMessage}</p>
+                  </div>
+                </div>
               </div>
             )}
 
