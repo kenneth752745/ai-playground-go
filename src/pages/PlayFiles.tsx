@@ -107,7 +107,7 @@ const PlayFiles = () => {
         const zip = await JSZip.loadAsync(file);
         const entries: { name: string; size: number; dir: boolean }[] = [];
         zip.forEach((relativePath, zipEntry) => {
-          entries.push({ name: relativePath, size: zipEntry._data?.uncompressedSize || 0, dir: zipEntry.dir });
+          entries.push({ name: relativePath, size: (zipEntry as any)._data?.uncompressedSize || 0, dir: zipEntry.dir });
         });
         entries.sort((a, b) => {
           if (a.dir !== b.dir) return a.dir ? -1 : 1;
