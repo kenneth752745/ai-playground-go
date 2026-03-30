@@ -1,10 +1,11 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import JSZip from "jszip";
 
 const MAX_SIZE_BYTES = 1_000_000_000; // 1GB = 1000MB
 const MAX_APK_SIZE_BYTES = 1_000_000_000; // 1GB (1000MB) for APK files
@@ -27,6 +28,7 @@ const PlayFiles = () => {
   const [checkProgress, setCheckProgress] = useState(0);
   const [aiMessage, setAiMessage] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zipEntries, setZipEntries] = useState<{ name: string; size: number; dir: boolean }[]>([]);
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     // Clean up previous URL
@@ -92,12 +94,30 @@ const PlayFiles = () => {
     [handleFileSelect]
   );
 
-  const handleRunPreview = () => {
+  const handleRunPreview = async () => {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setFileUrl(url);
     setStatus("previewing");
     setIsFullscreen(true);
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'zip') {
+      try {
+        const zip = await JSZip.loadAsync(file);
+        const entries: { name: string; size: number; dir: boolean }[] = [];
+        zip.forEach((relativePath, zipEntry) => {
+          entries.push({ name: relativePath, size: (zipEntry as any)._data?.uncompressedSize || 0, dir: zipEntry.dir });
+        });
+        entries.sort((a, b) => {
+          if (a.dir !== b.dir) return a.dir ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+        setZipEntries(entries);
+      } catch {
+        setZipEntries([]);
+      }
+    }
   };
 
   const handleReset = () => {
@@ -108,6 +128,7 @@ const PlayFiles = () => {
     setCheckProgress(0);
     setAiMessage("");
     setIsFullscreen(false);
+    setZipEntries([]);
   };
 
   const getPreviewContent = () => {
@@ -151,6 +172,47 @@ const PlayFiles = () => {
       return <iframe src={fileUrl} className="w-full h-full border-0 bg-background" title={file.name} />;
     }
 
+
+    // ZIP preview with file listing
+    if (ext === "zip") {
+      return (
+        <div className="flex flex-col items-center gap-4 w-full max-w-2xl p-6">
+          <Archive className="w-16 h-16 text-primary" />
+          <div className="text-center">
+            <p className="text-foreground font-bold text-xl">{file.name}</p>
+            <p className="text-muted-foreground mt-1">{formatSize(file.size)} — {zipEntries.filter(e => !e.dir).length} files, {zipEntries.filter(e => e.dir).length} folders</p>
+          </div>
+          <div className="w-full border border-border rounded-lg overflow-hidden bg-card max-h-[50vh] overflow-y-auto">
+            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-xs font-medium text-muted-foreground px-4 py-2 border-b border-border bg-muted">
+              <span>Name</span>
+              <span>Size</span>
+            </div>
+            {zipEntries.length === 0 ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading archive...
+              </div>
+            ) : (
+              zipEntries.map((entry, i) => (
+                <div key={i} className="grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50">
+                  <span className="truncate text-foreground">
+                    {entry.dir ? "📁 " : "📄 "}{entry.name}
+                  </span>
+                  <span className="text-muted-foreground text-xs whitespace-nowrap">
+                    {entry.dir ? "—" : formatSize(entry.size)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+          <a href={fileUrl} download={file.name}>
+            <Button className="gap-2" size="lg">
+              <Download className="w-5 h-5" />
+              Download ZIP
+            </Button>
+          </a>
+        </div>
+      );
+    }
 
     // Executable / runnable file types with dedicated previews
     const fileTypeInfo: Record<string, { icon: React.ReactNode; label: string; description: string; buttonText: string }> = {
