@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import JSZip from "jszip";
 
 const MAX_SIZE_BYTES = 1_000_000_000; // 1GB = 1000MB
 const MAX_APK_SIZE_BYTES = 1_000_000_000; // 1GB (1000MB) for APK files
