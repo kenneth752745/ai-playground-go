@@ -128,6 +128,7 @@ const PlayFiles = () => {
     setCheckProgress(0);
     setAiMessage("");
     setIsFullscreen(false);
+    setZipEntries([]);
   };
 
   const getPreviewContent = () => {
