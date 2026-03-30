@@ -173,6 +173,47 @@ const PlayFiles = () => {
     }
 
 
+    // ZIP preview with file listing
+    if (ext === "zip") {
+      return (
+        <div className="flex flex-col items-center gap-4 w-full max-w-2xl p-6">
+          <Archive className="w-16 h-16 text-primary" />
+          <div className="text-center">
+            <p className="text-foreground font-bold text-xl">{file.name}</p>
+            <p className="text-muted-foreground mt-1">{formatSize(file.size)} — {zipEntries.filter(e => !e.dir).length} files, {zipEntries.filter(e => e.dir).length} folders</p>
+          </div>
+          <div className="w-full border border-border rounded-lg overflow-hidden bg-card max-h-[50vh] overflow-y-auto">
+            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-xs font-medium text-muted-foreground px-4 py-2 border-b border-border bg-muted">
+              <span>Name</span>
+              <span>Size</span>
+            </div>
+            {zipEntries.length === 0 ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading archive...
+              </div>
+            ) : (
+              zipEntries.map((entry, i) => (
+                <div key={i} className="grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50">
+                  <span className="truncate text-foreground">
+                    {entry.dir ? "📁 " : "📄 "}{entry.name}
+                  </span>
+                  <span className="text-muted-foreground text-xs whitespace-nowrap">
+                    {entry.dir ? "—" : formatSize(entry.size)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+          <a href={fileUrl} download={file.name}>
+            <Button className="gap-2" size="lg">
+              <Download className="w-5 h-5" />
+              Download ZIP
+            </Button>
+          </a>
+        </div>
+      );
+    }
+
     // Executable / runnable file types with dedicated previews
     const fileTypeInfo: Record<string, { icon: React.ReactNode; label: string; description: string; buttonText: string }> = {
       // Executables & installers
