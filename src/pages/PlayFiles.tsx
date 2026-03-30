@@ -173,15 +173,26 @@ const PlayFiles = () => {
       return <iframe src={fileUrl} className="w-full h-full border-0 bg-background" title={file.name} />;
     }
 
-
-    // ZIP preview with file listing
-    if (ext === "zip") {
+    // ZIP-based archive preview (zip, apk, docx, xlsx, pptx, epub, jar)
+    const zipBasedExts = ['zip', 'apk', 'docx', 'xlsx', 'pptx', 'epub', 'jar'];
+    const zipLabels: Record<string, { icon: React.ReactNode; label: string; buttonText: string }> = {
+      zip: { icon: <Archive className="w-16 h-16 text-primary" />, label: "ZIP Archive", buttonText: "Download ZIP" },
+      apk: { icon: <Smartphone className="w-16 h-16 text-primary" />, label: "Android App Package", buttonText: "Download APK" },
+      docx: { icon: <FileText className="w-16 h-16 text-primary" />, label: "Word Document", buttonText: "Download DOCX" },
+      xlsx: { icon: <Table className="w-16 h-16 text-primary" />, label: "Excel Spreadsheet", buttonText: "Download XLSX" },
+      pptx: { icon: <Presentation className="w-16 h-16 text-primary" />, label: "PowerPoint Presentation", buttonText: "Download PPTX" },
+      epub: { icon: <BookOpen className="w-16 h-16 text-primary" />, label: "eBook", buttonText: "Download EPUB" },
+      jar: { icon: <Package className="w-16 h-16 text-primary" />, label: "Java Archive", buttonText: "Download JAR" },
+    };
+    if (ext && zipBasedExts.includes(ext)) {
+      const info = zipLabels[ext] || { icon: <Archive className="w-16 h-16 text-primary" />, label: ext.toUpperCase(), buttonText: `Download ${ext.toUpperCase()}` };
       return (
         <div className="flex flex-col items-center gap-4 w-full max-w-2xl p-6">
-          <Archive className="w-16 h-16 text-primary" />
+          {info.icon}
           <div className="text-center">
             <p className="text-foreground font-bold text-xl">{file.name}</p>
-            <p className="text-muted-foreground mt-1">{formatSize(file.size)} — {zipEntries.filter(e => !e.dir).length} files, {zipEntries.filter(e => e.dir).length} folders</p>
+            <p className="text-muted-foreground mt-1">{formatSize(file.size)} — {info.label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{zipEntries.filter(e => !e.dir).length} files, {zipEntries.filter(e => e.dir).length} folders inside</p>
           </div>
           <div className="w-full border border-border rounded-lg overflow-hidden bg-card max-h-[50vh] overflow-y-auto">
             <div className="grid grid-cols-[1fr_auto] gap-x-4 text-xs font-medium text-muted-foreground px-4 py-2 border-b border-border bg-muted">
@@ -190,7 +201,7 @@ const PlayFiles = () => {
             </div>
             {zipEntries.length === 0 ? (
               <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading archive...
+                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading contents...
               </div>
             ) : (
               zipEntries.map((entry, i) => (
@@ -208,7 +219,7 @@ const PlayFiles = () => {
           <a href={fileUrl} download={file.name}>
             <Button className="gap-2" size="lg">
               <Download className="w-5 h-5" />
-              Download ZIP
+              {info.buttonText}
             </Button>
           </a>
         </div>
