@@ -237,21 +237,14 @@ const PlayFiles = () => {
       rpm: { icon: <Package className="w-20 h-20 text-primary" />, label: "RPM Package (.rpm)", description: "Linux RPM package. Install with rpm -i or dnf.", buttonText: "Download RPM" },
       dmg: { icon: <Monitor className="w-20 h-20 text-primary" />, label: "macOS Disk Image (.dmg)", description: "macOS application image. Download and open on your Mac.", buttonText: "Download DMG" },
       app: { icon: <Monitor className="w-20 h-20 text-primary" />, label: "macOS Application (.app)", description: "macOS application. Download and run on your Mac.", buttonText: "Download APP" },
-      // Archives
-      zip: { icon: <Archive className="w-20 h-20 text-primary" />, label: "ZIP Archive (.zip)", description: "Compressed archive. Download and extract on your device.", buttonText: "Download ZIP" },
       rar: { icon: <Archive className="w-20 h-20 text-primary" />, label: "RAR Archive (.rar)", description: "Compressed archive. Download and extract with WinRAR or 7-Zip.", buttonText: "Download RAR" },
       "7z": { icon: <Archive className="w-20 h-20 text-primary" />, label: "7-Zip Archive (.7z)", description: "Compressed archive. Download and extract with 7-Zip.", buttonText: "Download 7Z" },
       tar: { icon: <Archive className="w-20 h-20 text-primary" />, label: "TAR Archive (.tar)", description: "Tape archive. Download and extract on your device.", buttonText: "Download TAR" },
       gz: { icon: <Archive className="w-20 h-20 text-primary" />, label: "GZip Archive (.gz)", description: "GZip compressed file. Download and extract on your device.", buttonText: "Download GZ" },
       iso: { icon: <HardDrive className="w-20 h-20 text-primary" />, label: "Disc Image (.iso)", description: "Disc image file. Mount or burn to a disc.", buttonText: "Download ISO" },
-      // Documents
       doc: { icon: <FileText className="w-20 h-20 text-primary" />, label: "Word Document (.doc)", description: "Microsoft Word document. Download and open with Word.", buttonText: "Download DOC" },
-      docx: { icon: <FileText className="w-20 h-20 text-primary" />, label: "Word Document (.docx)", description: "Microsoft Word document. Download and open with Word.", buttonText: "Download DOCX" },
       xls: { icon: <Table className="w-20 h-20 text-primary" />, label: "Excel Spreadsheet (.xls)", description: "Microsoft Excel spreadsheet. Download and open with Excel.", buttonText: "Download XLS" },
-      xlsx: { icon: <Table className="w-20 h-20 text-primary" />, label: "Excel Spreadsheet (.xlsx)", description: "Microsoft Excel spreadsheet. Download and open with Excel.", buttonText: "Download XLSX" },
-      pptx: { icon: <Presentation className="w-20 h-20 text-primary" />, label: "PowerPoint (.pptx)", description: "Microsoft PowerPoint presentation. Download and open.", buttonText: "Download PPTX" },
       ppt: { icon: <Presentation className="w-20 h-20 text-primary" />, label: "PowerPoint (.ppt)", description: "Microsoft PowerPoint presentation. Download and open.", buttonText: "Download PPT" },
-      epub: { icon: <BookOpen className="w-20 h-20 text-primary" />, label: "eBook (.epub)", description: "Electronic book. Open with an eBook reader app.", buttonText: "Download EPUB" },
     };
 
     const info = ext ? fileTypeInfo[ext] : null;
