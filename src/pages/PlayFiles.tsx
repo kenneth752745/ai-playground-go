@@ -102,7 +102,8 @@ const PlayFiles = () => {
     setIsFullscreen(true);
 
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext === 'zip') {
+    const zipBasedExts = ['zip', 'apk', 'docx', 'xlsx', 'pptx', 'epub', 'jar'];
+    if (ext && zipBasedExts.includes(ext)) {
       try {
         const zip = await JSZip.loadAsync(file);
         const entries: { name: string; size: number; dir: boolean }[] = [];
