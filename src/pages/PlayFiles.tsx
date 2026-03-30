@@ -29,6 +29,8 @@ const PlayFiles = () => {
   const [aiMessage, setAiMessage] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zipEntries, setZipEntries] = useState<{ name: string; size: number; dir: boolean }[]>([]);
+  const [convertProgress, setConvertProgress] = useState(0);
+  const [convertMessage, setConvertMessage] = useState("");
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     // Clean up previous URL
