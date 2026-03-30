@@ -94,12 +94,30 @@ const PlayFiles = () => {
     [handleFileSelect]
   );
 
-  const handleRunPreview = () => {
+  const handleRunPreview = async () => {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setFileUrl(url);
     setStatus("previewing");
     setIsFullscreen(true);
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'zip') {
+      try {
+        const zip = await JSZip.loadAsync(file);
+        const entries: { name: string; size: number; dir: boolean }[] = [];
+        zip.forEach((relativePath, zipEntry) => {
+          entries.push({ name: relativePath, size: zipEntry._data?.uncompressedSize || 0, dir: zipEntry.dir });
+        });
+        entries.sort((a, b) => {
+          if (a.dir !== b.dir) return a.dir ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+        setZipEntries(entries);
+      } catch {
+        setZipEntries([]);
+      }
+    }
   };
 
   const handleReset = () => {
