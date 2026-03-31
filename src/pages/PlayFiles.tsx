@@ -136,6 +136,16 @@ const PlayFiles = () => {
 
   const handleDownloadFile = () => {
     if (!file) return;
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'apk') {
+      setShowApkConfirm(true);
+      return;
+    }
+    doDownload();
+  };
+
+  const doDownload = () => {
+    if (!file) return;
     const url = URL.createObjectURL(file);
     const a = document.createElement('a');
     a.href = url;
