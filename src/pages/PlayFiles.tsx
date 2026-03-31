@@ -622,6 +622,34 @@ ${contentHtml}
           </Card>
         )}
       </div>
+
+      {/* APK Download Confirmation Dialog */}
+      <AlertDialog open={showApkConfirm} onOpenChange={setShowApkConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-primary" />
+              Download APK
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you really want to download this app?
+              <br />
+              <span className="font-semibold text-foreground mt-2 block">{file?.name}</span>
+              <span className="text-xs text-muted-foreground">{file ? formatSize(file.size) : ''}</span>
+              <br />
+              <span className="text-xs mt-2 block">
+                APK files are Android applications. Only install apps from sources you trust.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setShowApkConfirm(false); doDownload(); }}>
+              Confirm Download
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
