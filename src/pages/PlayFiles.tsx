@@ -551,31 +551,46 @@ ${contentHtml}
             {/* Actions */}
             {status === "approved" && (
               <div className="space-y-3">
-                <div className="flex gap-3">
-                  <Button className="flex-1 gap-2" onClick={handleRunPreview}>
-                    <Maximize className="w-4 h-4" />
-                    Preview
-                  </Button>
-                  <Button variant="outline" className="flex-1 gap-2" onClick={handleDownloadFile}>
-                    <Download className="w-4 h-4" />
-                    Download File
-                  </Button>
-                </div>
-                {file.name.split('.').pop()?.toLowerCase() === 'apk' && (
-                  <Button variant="default" className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApkConfirm(true)}>
-                    <Smartphone className="w-4 h-4" />
-                    Download APK
-                  </Button>
+                {file.name.split('.').pop()?.toLowerCase() === 'apk' ? (
+                  <>
+                    <Button className="w-full gap-2 h-12 text-base bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApkConfirm(true)}>
+                      <Smartphone className="w-5 h-5" />
+                      Download APK
+                    </Button>
+                    <div className="flex gap-3">
+                      <Button variant="outline" className="flex-1 gap-2" onClick={handleRunPreview}>
+                        <Maximize className="w-4 h-4" />
+                        Preview
+                      </Button>
+                      <Button variant="secondary" className="flex-1 gap-2" onClick={handleConvertToHtml}>
+                        <Code className="w-4 h-4" />
+                        Download as HTML
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex gap-3">
+                      <Button className="flex-1 gap-2" onClick={handleRunPreview}>
+                        <Maximize className="w-4 h-4" />
+                        Preview
+                      </Button>
+                      <Button variant="outline" className="flex-1 gap-2" onClick={handleDownloadFile}>
+                        <Download className="w-4 h-4" />
+                        Download File
+                      </Button>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button variant="secondary" className="flex-1 gap-2" onClick={handleConvertToHtml}>
+                        <Code className="w-4 h-4" />
+                        Download as HTML
+                      </Button>
+                      <Button variant="ghost" onClick={handleReset}>
+                        Upload Another
+                      </Button>
+                    </div>
+                  </>
                 )}
-                <div className="flex gap-3">
-                  <Button variant="secondary" className="flex-1 gap-2" onClick={handleConvertToHtml}>
-                    <Code className="w-4 h-4" />
-                    Download as HTML
-                  </Button>
-                  <Button variant="ghost" onClick={handleReset}>
-                    Upload Another
-                  </Button>
-                </div>
               </div>
             )}
 
