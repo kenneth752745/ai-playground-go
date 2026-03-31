@@ -2,6 +2,16 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -31,6 +41,7 @@ const PlayFiles = () => {
   const [zipEntries, setZipEntries] = useState<{ name: string; size: number; dir: boolean }[]>([]);
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
+  const [showApkConfirm, setShowApkConfirm] = useState(false);
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     // Clean up previous URL
@@ -124,6 +135,16 @@ const PlayFiles = () => {
   };
 
   const handleDownloadFile = () => {
+    if (!file) return;
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'apk') {
+      setShowApkConfirm(true);
+      return;
+    }
+    doDownload();
+  };
+
+  const doDownload = () => {
     if (!file) return;
     const url = URL.createObjectURL(file);
     const a = document.createElement('a');
@@ -540,6 +561,12 @@ ${contentHtml}
                     Download File
                   </Button>
                 </div>
+                {file.name.split('.').pop()?.toLowerCase() === 'apk' && (
+                  <Button variant="default" className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApkConfirm(true)}>
+                    <Smartphone className="w-4 h-4" />
+                    Download APK
+                  </Button>
+                )}
                 <div className="flex gap-3">
                   <Button variant="secondary" className="flex-1 gap-2" onClick={handleConvertToHtml}>
                     <Code className="w-4 h-4" />
@@ -595,6 +622,34 @@ ${contentHtml}
           </Card>
         )}
       </div>
+
+      {/* APK Download Confirmation Dialog */}
+      <AlertDialog open={showApkConfirm} onOpenChange={setShowApkConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-primary" />
+              Download APK
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you really want to download this app?
+              <br />
+              <span className="font-semibold text-foreground mt-2 block">{file?.name}</span>
+              <span className="text-xs text-muted-foreground">{file ? formatSize(file.size) : ''}</span>
+              <br />
+              <span className="text-xs mt-2 block">
+                APK files are Android applications. Only install apps from sources you trust.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setShowApkConfirm(false); doDownload(); }}>
+              Confirm Download
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
