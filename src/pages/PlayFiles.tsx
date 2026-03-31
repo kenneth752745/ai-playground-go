@@ -41,6 +41,7 @@ const PlayFiles = () => {
   const [zipEntries, setZipEntries] = useState<{ name: string; size: number; dir: boolean }[]>([]);
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
+  const [showApkConfirm, setShowApkConfirm] = useState(false);
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     // Clean up previous URL
