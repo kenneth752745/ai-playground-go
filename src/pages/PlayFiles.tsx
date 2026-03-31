@@ -561,6 +561,12 @@ ${contentHtml}
                     Download File
                   </Button>
                 </div>
+                {file.name.split('.').pop()?.toLowerCase() === 'apk' && (
+                  <Button variant="default" className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApkConfirm(true)}>
+                    <Smartphone className="w-4 h-4" />
+                    Download APK
+                  </Button>
+                )}
                 <div className="flex gap-3">
                   <Button variant="secondary" className="flex-1 gap-2" onClick={handleConvertToHtml}>
                     <Code className="w-4 h-4" />
