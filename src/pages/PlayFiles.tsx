@@ -317,6 +317,9 @@ ${contentHtml}
     setAiMessage("");
     setIsFullscreen(false);
     setZipEntries([]);
+    zipRef.current = null;
+    if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
+    setZipPreview(null);
     setConvertProgress(0);
     setConvertMessage("");
   };
