@@ -122,6 +122,7 @@ const PlayFiles = () => {
     if (ext && zipBasedExts.includes(ext)) {
       try {
         const zip = await JSZip.loadAsync(file);
+        zipRef.current = zip;
         const entries: { name: string; size: number; dir: boolean }[] = [];
         zip.forEach((relativePath, zipEntry) => {
           entries.push({ name: relativePath, size: (zipEntry as any)._data?.uncompressedSize || 0, dir: zipEntry.dir });
@@ -133,9 +134,45 @@ const PlayFiles = () => {
         setZipEntries(entries);
       } catch {
         setZipEntries([]);
+        zipRef.current = null;
       }
     }
   };
+
+  const handleZipEntryClick = async (entryName: string) => {
+    if (!zipRef.current) return;
+    const zipFile = zipRef.current.file(entryName);
+    if (!zipFile) return;
+
+    setZipPreviewLoading(true);
+    setZipPreview({ name: entryName, kind: "text", content: "" });
+
+    const ext = entryName.split('.').pop()?.toLowerCase() || '';
+    const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"];
+    const textExts = ["txt", "md", "json", "xml", "csv", "js", "ts", "tsx", "jsx", "css", "html", "htm", "py", "java", "c", "cpp", "h", "yaml", "yml", "toml", "ini", "cfg", "log", "sh", "bat", "rs", "go", "rb", "php", "swift", "kt", "sql", "env", "gitignore"];
+
+    try {
+      if (imageExts.includes(ext)) {
+        const blob = await zipFile.async("blob");
+        const mime = ext === "svg" ? "image/svg+xml" : `image/${ext === "jpg" ? "jpeg" : ext}`;
+        const url = URL.createObjectURL(new Blob([blob], { type: mime }));
+        setZipPreview({ name: entryName, kind: "image", content: "", url });
+      } else if (textExts.includes(ext) || !ext) {
+        const text = await zipFile.async("string");
+        setZipPreview({ name: entryName, kind: "text", content: text.slice(0, 200_000) });
+      } else {
+        setZipPreview({ name: entryName, kind: "unsupported", content: `Cannot preview .${ext} files inside the archive.` });
+      }
+    } catch {
+      setZipPreview({ name: entryName, kind: "unsupported", content: "Failed to read file from archive." });
+    } finally {
+      setZipPreviewLoading(false);
+    }
+  };
+
+  const closeZipPreview = () => {
+    if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
+    setZipPreview(null);
 
   const handleDownloadFile = () => {
     if (!file) return;
