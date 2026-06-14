@@ -39,6 +39,9 @@ const PlayFiles = () => {
   const [aiMessage, setAiMessage] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zipEntries, setZipEntries] = useState<{ name: string; size: number; dir: boolean }[]>([]);
+  const zipRef = useRef<JSZip | null>(null);
+  const [zipPreview, setZipPreview] = useState<{ name: string; kind: "text" | "image" | "unsupported"; content: string; url?: string } | null>(null);
+  const [zipPreviewLoading, setZipPreviewLoading] = useState(false);
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
   const [showApkConfirm, setShowApkConfirm] = useState(false);
@@ -119,6 +122,7 @@ const PlayFiles = () => {
     if (ext && zipBasedExts.includes(ext)) {
       try {
         const zip = await JSZip.loadAsync(file);
+        zipRef.current = zip;
         const entries: { name: string; size: number; dir: boolean }[] = [];
         zip.forEach((relativePath, zipEntry) => {
           entries.push({ name: relativePath, size: (zipEntry as any)._data?.uncompressedSize || 0, dir: zipEntry.dir });
@@ -130,8 +134,45 @@ const PlayFiles = () => {
         setZipEntries(entries);
       } catch {
         setZipEntries([]);
+        zipRef.current = null;
       }
     }
+  };
+
+  const handleZipEntryClick = async (entryName: string) => {
+    if (!zipRef.current) return;
+    const zipFile = zipRef.current.file(entryName);
+    if (!zipFile) return;
+
+    setZipPreviewLoading(true);
+    setZipPreview({ name: entryName, kind: "text", content: "" });
+
+    const ext = entryName.split('.').pop()?.toLowerCase() || '';
+    const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"];
+    const textExts = ["txt", "md", "json", "xml", "csv", "js", "ts", "tsx", "jsx", "css", "html", "htm", "py", "java", "c", "cpp", "h", "yaml", "yml", "toml", "ini", "cfg", "log", "sh", "bat", "rs", "go", "rb", "php", "swift", "kt", "sql", "env", "gitignore"];
+
+    try {
+      if (imageExts.includes(ext)) {
+        const blob = await zipFile.async("blob");
+        const mime = ext === "svg" ? "image/svg+xml" : `image/${ext === "jpg" ? "jpeg" : ext}`;
+        const url = URL.createObjectURL(new Blob([blob], { type: mime }));
+        setZipPreview({ name: entryName, kind: "image", content: "", url });
+      } else if (textExts.includes(ext) || !ext) {
+        const text = await zipFile.async("string");
+        setZipPreview({ name: entryName, kind: "text", content: text.slice(0, 200_000) });
+      } else {
+        setZipPreview({ name: entryName, kind: "unsupported", content: `Cannot preview .${ext} files inside the archive.` });
+      }
+    } catch {
+      setZipPreview({ name: entryName, kind: "unsupported", content: "Failed to read file from archive." });
+    } finally {
+      setZipPreviewLoading(false);
+    }
+  };
+
+  const closeZipPreview = () => {
+    if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
+    setZipPreview(null);
   };
 
   const handleDownloadFile = () => {
@@ -276,6 +317,9 @@ ${contentHtml}
     setAiMessage("");
     setIsFullscreen(false);
     setZipEntries([]);
+    zipRef.current = null;
+    if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
+    setZipPreview(null);
     setConvertProgress(0);
     setConvertMessage("");
   };
@@ -353,23 +397,59 @@ ${contentHtml}
               </div>
             ) : (
               zipEntries.map((entry, i) => (
-                <div key={i} className="grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50">
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => !entry.dir && handleZipEntryClick(entry.name)}
+                  disabled={entry.dir}
+                  className="w-full grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50 text-left disabled:cursor-default disabled:hover:bg-transparent"
+                >
                   <span className="truncate text-foreground">
                     {entry.dir ? "📁 " : "📄 "}{entry.name}
                   </span>
                   <span className="text-muted-foreground text-xs whitespace-nowrap">
                     {entry.dir ? "—" : formatSize(entry.size)}
                   </span>
-                </div>
+                </button>
               ))
             )}
           </div>
+          <p className="text-xs text-muted-foreground">Click any file inside the archive to preview it.</p>
           <a href={fileUrl} download={file.name}>
             <Button className="gap-2" size="lg">
               <Download className="w-5 h-5" />
               {info.buttonText}
             </Button>
           </a>
+
+          {/* Inline preview of file inside zip */}
+          {zipPreview && (
+            <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">Inside {file.name}</p>
+                  <p className="font-medium truncate">{zipPreview.name}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={closeZipPreview}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
+                {zipPreviewLoading ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                ) : zipPreview.kind === "image" && zipPreview.url ? (
+                  <img src={zipPreview.url} alt={zipPreview.name} className="max-w-full max-h-full object-contain" />
+                ) : zipPreview.kind === "text" ? (
+                  <pre className="w-full h-full text-xs whitespace-pre-wrap break-words font-mono bg-muted p-4 rounded overflow-auto">{zipPreview.content}</pre>
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    <p className="text-4xl mb-2">📄</p>
+                    <p>{zipPreview.content}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       );
     }
