@@ -173,6 +173,7 @@ const PlayFiles = () => {
   const closeZipPreview = () => {
     if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
     setZipPreview(null);
+  };
 
   const handleDownloadFile = () => {
     if (!file) return;
