@@ -39,6 +39,9 @@ const PlayFiles = () => {
   const [aiMessage, setAiMessage] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zipEntries, setZipEntries] = useState<{ name: string; size: number; dir: boolean }[]>([]);
+  const zipRef = useRef<JSZip | null>(null);
+  const [zipPreview, setZipPreview] = useState<{ name: string; kind: "text" | "image" | "unsupported"; content: string; url?: string } | null>(null);
+  const [zipPreviewLoading, setZipPreviewLoading] = useState(false);
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
   const [showApkConfirm, setShowApkConfirm] = useState(false);
