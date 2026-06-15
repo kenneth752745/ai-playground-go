@@ -142,6 +142,7 @@ const PlayFiles = () => {
             `✅ File approved! Size: ${formatSize(selectedFile.size)} — within the ${sizeLimitLabel} limit. Ready to download and preview.`
           );
           toast.success("File approved by AI");
+          saveUpload(selectedFile);
         }
       }
     }, stepDuration);
