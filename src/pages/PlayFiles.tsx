@@ -42,7 +42,7 @@ const PlayFiles = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zipEntries, setZipEntries] = useState<{ name: string; size: number; dir: boolean }[]>([]);
   const zipRef = useRef<JSZip | null>(null);
-  const [zipPreview, setZipPreview] = useState<{ name: string; kind: "text" | "image" | "unsupported"; content: string; url?: string } | null>(null);
+  const [zipPreview, setZipPreview] = useState<{ name: string; kind: "text" | "image" | "html" | "unsupported"; content: string; url?: string } | null>(null);
   const [zipPreviewLoading, setZipPreviewLoading] = useState(false);
   const [docHtml, setDocHtml] = useState<string | null>(null);
   const [docLoading, setDocLoading] = useState(false);
@@ -136,6 +136,20 @@ const PlayFiles = () => {
           return a.name.localeCompare(b.name);
         });
         setZipEntries(entries);
+
+        // Auto-preview a primary content file (single file, index.html, or first html/image/pdf)
+        const files = entries.filter((e) => !e.dir);
+        const previewableExts = ["html", "htm", "pdf", "jpg", "jpeg", "png", "gif", "webp", "svg", "txt", "md", "json"];
+        const findByName = (n: string) => files.find((f) => f.name.toLowerCase().endsWith(n));
+        const auto =
+          (files.length === 1 ? files[0] : null) ||
+          findByName("/index.html") ||
+          findByName("index.html") ||
+          files.find((f) => previewableExts.includes(f.name.split(".").pop()?.toLowerCase() || ""));
+        if (auto) {
+          // Defer so state updates first
+          setTimeout(() => handleZipEntryClick(auto.name), 0);
+        }
       } catch {
         setZipEntries([]);
         zipRef.current = null;
@@ -192,11 +206,13 @@ const PlayFiles = () => {
     if (!zipFile) return;
 
     setZipPreviewLoading(true);
+    if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
     setZipPreview({ name: entryName, kind: "text", content: "" });
 
     const ext = entryName.split('.').pop()?.toLowerCase() || '';
     const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"];
-    const textExts = ["txt", "md", "json", "xml", "csv", "js", "ts", "tsx", "jsx", "css", "html", "htm", "py", "java", "c", "cpp", "h", "yaml", "yml", "toml", "ini", "cfg", "log", "sh", "bat", "rs", "go", "rb", "php", "swift", "kt", "sql", "env", "gitignore"];
+    const htmlExts = ["html", "htm"];
+    const textExts = ["txt", "md", "json", "xml", "csv", "js", "ts", "tsx", "jsx", "css", "py", "java", "c", "cpp", "h", "yaml", "yml", "toml", "ini", "cfg", "log", "sh", "bat", "rs", "go", "rb", "php", "swift", "kt", "sql", "env", "gitignore"];
 
     try {
       if (imageExts.includes(ext)) {
@@ -204,6 +220,14 @@ const PlayFiles = () => {
         const mime = ext === "svg" ? "image/svg+xml" : `image/${ext === "jpg" ? "jpeg" : ext}`;
         const url = URL.createObjectURL(new Blob([blob], { type: mime }));
         setZipPreview({ name: entryName, kind: "image", content: "", url });
+      } else if (htmlExts.includes(ext)) {
+        const blob = await zipFile.async("blob");
+        const url = URL.createObjectURL(new Blob([blob], { type: "text/html" }));
+        setZipPreview({ name: entryName, kind: "html", content: "", url });
+      } else if (ext === "pdf") {
+        const blob = await zipFile.async("blob");
+        const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+        setZipPreview({ name: entryName, kind: "html", content: "", url });
       } else if (textExts.includes(ext) || !ext) {
         const text = await zipFile.async("string");
         setZipPreview({ name: entryName, kind: "text", content: text.slice(0, 200_000) });
@@ -507,6 +531,8 @@ ${contentHtml}
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 ) : zipPreview.kind === "image" && zipPreview.url ? (
                   <img src={zipPreview.url} alt={zipPreview.name} className="max-w-full max-h-full object-contain" />
+                ) : zipPreview.kind === "html" && zipPreview.url ? (
+                  <iframe src={zipPreview.url} title={zipPreview.name} className="w-full h-full border-0 bg-white rounded" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
                 ) : zipPreview.kind === "text" ? (
                   <pre className="w-full h-full text-xs whitespace-pre-wrap break-words font-mono bg-muted p-4 rounded overflow-auto">{zipPreview.content}</pre>
                 ) : (
