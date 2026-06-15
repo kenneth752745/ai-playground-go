@@ -146,7 +146,7 @@ const PlayFiles = () => {
         }
       }
     }, stepDuration);
-  }, [fileUrl]);
+  }, [fileUrl, saveUpload]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
