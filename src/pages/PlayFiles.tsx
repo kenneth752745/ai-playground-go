@@ -136,6 +136,20 @@ const PlayFiles = () => {
           return a.name.localeCompare(b.name);
         });
         setZipEntries(entries);
+
+        // Auto-preview a primary content file (single file, index.html, or first html/image/pdf)
+        const files = entries.filter((e) => !e.dir);
+        const previewableExts = ["html", "htm", "pdf", "jpg", "jpeg", "png", "gif", "webp", "svg", "txt", "md", "json"];
+        const findByName = (n: string) => files.find((f) => f.name.toLowerCase().endsWith(n));
+        const auto =
+          (files.length === 1 ? files[0] : null) ||
+          findByName("/index.html") ||
+          findByName("index.html") ||
+          files.find((f) => previewableExts.includes(f.name.split(".").pop()?.toLowerCase() || ""));
+        if (auto) {
+          // Defer so state updates first
+          setTimeout(() => handleZipEntryClick(auto.name), 0);
+        }
       } catch {
         setZipEntries([]);
         zipRef.current = null;
