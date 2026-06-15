@@ -531,6 +531,8 @@ ${contentHtml}
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 ) : zipPreview.kind === "image" && zipPreview.url ? (
                   <img src={zipPreview.url} alt={zipPreview.name} className="max-w-full max-h-full object-contain" />
+                ) : zipPreview.kind === "html" && zipPreview.url ? (
+                  <iframe src={zipPreview.url} title={zipPreview.name} className="w-full h-full border-0 bg-white rounded" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
                 ) : zipPreview.kind === "text" ? (
                   <pre className="w-full h-full text-xs whitespace-pre-wrap break-words font-mono bg-muted p-4 rounded overflow-auto">{zipPreview.content}</pre>
                 ) : (
