@@ -44,6 +44,8 @@ const PlayFiles = () => {
   const zipRef = useRef<JSZip | null>(null);
   const [zipPreview, setZipPreview] = useState<{ name: string; kind: "text" | "image" | "unsupported"; content: string; url?: string } | null>(null);
   const [zipPreviewLoading, setZipPreviewLoading] = useState(false);
+  const [docHtml, setDocHtml] = useState<string | null>(null);
+  const [docLoading, setDocLoading] = useState(false);
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
   const [showApkConfirm, setShowApkConfirm] = useState(false);
