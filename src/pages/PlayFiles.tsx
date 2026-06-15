@@ -435,35 +435,54 @@ ${contentHtml}
             <p className="text-muted-foreground mt-1">{formatSize(file.size)} — {info.label}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{zipEntries.filter(e => !e.dir).length} files, {zipEntries.filter(e => e.dir).length} folders inside</p>
           </div>
-          <div className="w-full border border-border rounded-lg overflow-hidden bg-card max-h-[50vh] overflow-y-auto">
-            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-xs font-medium text-muted-foreground px-4 py-2 border-b border-border bg-muted">
-              <span>Name</span>
-              <span>Size</span>
+          {(docLoading || docHtml) && (
+            <div className="w-full border border-border rounded-lg bg-card p-4 max-h-[60vh] overflow-auto text-left">
+              {docLoading ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Rendering document preview...
+                </div>
+              ) : (
+                <div
+                  className="doc-preview prose prose-sm dark:prose-invert max-w-none [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_th]:bg-muted [&_.sheet-title]:mt-4 [&_.sheet-title]:font-bold [&_.slide]:border [&_.slide]:border-border [&_.slide]:rounded [&_.slide]:p-3 [&_.slide]:mb-3 [&_.slide-num]:text-xs [&_.slide-num]:text-muted-foreground [&_.slide-num]:mb-2"
+                  dangerouslySetInnerHTML={{ __html: docHtml! }}
+                />
+              )}
             </div>
-            {zipEntries.length === 0 ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading contents...
+          )}
+          <details className="w-full">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground select-none">
+              Browse archive contents ({zipEntries.filter(e => !e.dir).length} files)
+            </summary>
+            <div className="mt-2 w-full border border-border rounded-lg overflow-hidden bg-card max-h-[50vh] overflow-y-auto">
+              <div className="grid grid-cols-[1fr_auto] gap-x-4 text-xs font-medium text-muted-foreground px-4 py-2 border-b border-border bg-muted">
+                <span>Name</span>
+                <span>Size</span>
               </div>
-            ) : (
-              zipEntries.map((entry, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => !entry.dir && handleZipEntryClick(entry.name)}
-                  disabled={entry.dir}
-                  className="w-full grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50 text-left disabled:cursor-default disabled:hover:bg-transparent"
-                >
-                  <span className="truncate text-foreground">
-                    {entry.dir ? "📁 " : "📄 "}{entry.name}
-                  </span>
-                  <span className="text-muted-foreground text-xs whitespace-nowrap">
-                    {entry.dir ? "—" : formatSize(entry.size)}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">Click any file inside the archive to preview it.</p>
+              {zipEntries.length === 0 ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading contents...
+                </div>
+              ) : (
+                zipEntries.map((entry, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => !entry.dir && handleZipEntryClick(entry.name)}
+                    disabled={entry.dir}
+                    className="w-full grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50 text-left disabled:cursor-default disabled:hover:bg-transparent"
+                  >
+                    <span className="truncate text-foreground">
+                      {entry.dir ? "📁 " : "📄 "}{entry.name}
+                    </span>
+                    <span className="text-muted-foreground text-xs whitespace-nowrap">
+                      {entry.dir ? "—" : formatSize(entry.size)}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Click any file inside the archive to preview it.</p>
+          </details>
           <a href={fileUrl} download={file.name}>
             <Button className="gap-2" size="lg">
               <Download className="w-5 h-5" />
