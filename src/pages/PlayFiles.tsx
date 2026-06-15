@@ -16,6 +16,8 @@ import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Dow
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import mammoth from "mammoth";
+import * as XLSX from "xlsx";
 
 const MAX_SIZE_BYTES = 1_000_000_000; // 1GB = 1000MB
 const MAX_APK_SIZE_BYTES = 1_000_000_000; // 1GB (1000MB) for APK files
