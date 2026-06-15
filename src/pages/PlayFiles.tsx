@@ -140,6 +140,49 @@ const PlayFiles = () => {
         setZipEntries([]);
         zipRef.current = null;
       }
+
+      // Render real document previews for office docs
+      if (ext === "docx" || ext === "xlsx" || ext === "pptx") {
+        setDocLoading(true);
+        setDocHtml(null);
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          if (ext === "docx") {
+            const result = await mammoth.convertToHtml({ arrayBuffer });
+            setDocHtml(`<div class="docx-body">${result.value}</div>`);
+          } else if (ext === "xlsx") {
+            const wb = XLSX.read(arrayBuffer, { type: "array" });
+            const parts = wb.SheetNames.map((sn) => {
+              const html = XLSX.utils.sheet_to_html(wb.Sheets[sn], { editable: false });
+              return `<h2 class="sheet-title">${sn}</h2>${html}`;
+            });
+            setDocHtml(parts.join(""));
+          } else if (ext === "pptx") {
+            const zip = zipRef.current;
+            if (zip) {
+              const slideFiles = Object.keys(zip.files)
+                .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
+                .sort((a, b) => {
+                  const na = parseInt(a.match(/slide(\d+)/)?.[1] || "0");
+                  const nb = parseInt(b.match(/slide(\d+)/)?.[1] || "0");
+                  return na - nb;
+                });
+              const slides = await Promise.all(
+                slideFiles.map(async (name, i) => {
+                  const xml = await zip.file(name)!.async("string");
+                  const texts = Array.from(xml.matchAll(/<a:t[^>]*>([^<]*)<\/a:t>/g)).map((m) => m[1]);
+                  return `<section class="slide"><div class="slide-num">Slide ${i + 1}</div><div class="slide-body">${texts.map((t) => `<p>${t.replace(/</g, "&lt;")}</p>`).join("")}</div></section>`;
+                })
+              );
+              setDocHtml(slides.join(""));
+            }
+          }
+        } catch (err) {
+          setDocHtml(`<p style="color:#ef4444">Failed to render preview: ${(err as Error).message}</p>`);
+        } finally {
+          setDocLoading(false);
+        }
+      }
     }
   };
 
