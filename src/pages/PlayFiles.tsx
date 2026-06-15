@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen } from "lucide-react";
+import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen, History, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import JSZip from "jszip";
