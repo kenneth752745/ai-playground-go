@@ -367,6 +367,8 @@ ${contentHtml}
     zipRef.current = null;
     if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
     setZipPreview(null);
+    setDocHtml(null);
+    setDocLoading(false);
     setConvertProgress(0);
     setConvertMessage("");
   };
