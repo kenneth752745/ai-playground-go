@@ -682,14 +682,63 @@ ${contentHtml}
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Play Files</h1>
-          <Button variant="outline" size="sm" onClick={() => navigate("/")}>
-            ← Back
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowUploads((v) => !v)}>
+              <History className="w-4 h-4" />
+              Your Uploads {uploads.length > 0 && `(${uploads.length})`}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/")}>
+              ← Back
+            </Button>
+          </div>
         </div>
 
         <p className="text-muted-foreground">
           Upload a file (max 1GB / 1000MB). The AI will verify the file size before running.
         </p>
+
+        {/* Uploads history */}
+        {showUploads && (
+          <Card className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-primary" />
+                <h2 className="font-semibold text-foreground">Your Uploads</h2>
+              </div>
+              {uploads.length > 0 && (
+                <Button variant="ghost" size="sm" className="gap-1 text-destructive hover:text-destructive" onClick={clearUploads}>
+                  <Trash2 className="w-4 h-4" />
+                  Clear all
+                </Button>
+              )}
+            </div>
+            {uploads.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No uploads yet. Files you upload will appear here.
+              </p>
+            ) : (
+              <ul className="space-y-2 max-h-80 overflow-auto">
+                {uploads.map((u, i) => (
+                  <li key={`${u.name}-${u.uploadedAt}`} className="flex items-center gap-3 p-2 rounded-md border border-border bg-muted/30">
+                    <FileIcon className="w-5 h-5 text-primary shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{u.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatSize(u.size)} · {new Date(u.uploadedAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeUpload(i)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="text-xs text-muted-foreground">
+              History only stores file info (name, size, date) on this device — not the file itself.
+            </p>
+          </Card>
+        )}
 
         {/* Upload area */}
         {status === "idle" && (
