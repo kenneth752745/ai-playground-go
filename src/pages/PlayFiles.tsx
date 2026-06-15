@@ -16,6 +16,8 @@ import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Dow
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import mammoth from "mammoth";
+import * as XLSX from "xlsx";
 
 const MAX_SIZE_BYTES = 1_000_000_000; // 1GB = 1000MB
 const MAX_APK_SIZE_BYTES = 1_000_000_000; // 1GB (1000MB) for APK files
@@ -42,6 +44,8 @@ const PlayFiles = () => {
   const zipRef = useRef<JSZip | null>(null);
   const [zipPreview, setZipPreview] = useState<{ name: string; kind: "text" | "image" | "unsupported"; content: string; url?: string } | null>(null);
   const [zipPreviewLoading, setZipPreviewLoading] = useState(false);
+  const [docHtml, setDocHtml] = useState<string | null>(null);
+  const [docLoading, setDocLoading] = useState(false);
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
   const [showApkConfirm, setShowApkConfirm] = useState(false);
@@ -135,6 +139,49 @@ const PlayFiles = () => {
       } catch {
         setZipEntries([]);
         zipRef.current = null;
+      }
+
+      // Render real document previews for office docs
+      if (ext === "docx" || ext === "xlsx" || ext === "pptx") {
+        setDocLoading(true);
+        setDocHtml(null);
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          if (ext === "docx") {
+            const result = await mammoth.convertToHtml({ arrayBuffer });
+            setDocHtml(`<div class="docx-body">${result.value}</div>`);
+          } else if (ext === "xlsx") {
+            const wb = XLSX.read(arrayBuffer, { type: "array" });
+            const parts = wb.SheetNames.map((sn) => {
+              const html = XLSX.utils.sheet_to_html(wb.Sheets[sn], { editable: false });
+              return `<h2 class="sheet-title">${sn}</h2>${html}`;
+            });
+            setDocHtml(parts.join(""));
+          } else if (ext === "pptx") {
+            const zip = zipRef.current;
+            if (zip) {
+              const slideFiles = Object.keys(zip.files)
+                .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
+                .sort((a, b) => {
+                  const na = parseInt(a.match(/slide(\d+)/)?.[1] || "0");
+                  const nb = parseInt(b.match(/slide(\d+)/)?.[1] || "0");
+                  return na - nb;
+                });
+              const slides = await Promise.all(
+                slideFiles.map(async (name, i) => {
+                  const xml = await zip.file(name)!.async("string");
+                  const texts = Array.from(xml.matchAll(/<a:t[^>]*>([^<]*)<\/a:t>/g)).map((m) => m[1]);
+                  return `<section class="slide"><div class="slide-num">Slide ${i + 1}</div><div class="slide-body">${texts.map((t) => `<p>${t.replace(/</g, "&lt;")}</p>`).join("")}</div></section>`;
+                })
+              );
+              setDocHtml(slides.join(""));
+            }
+          }
+        } catch (err) {
+          setDocHtml(`<p style="color:#ef4444">Failed to render preview: ${(err as Error).message}</p>`);
+        } finally {
+          setDocLoading(false);
+        }
       }
     }
   };
@@ -320,6 +367,8 @@ ${contentHtml}
     zipRef.current = null;
     if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
     setZipPreview(null);
+    setDocHtml(null);
+    setDocLoading(false);
     setConvertProgress(0);
     setConvertMessage("");
   };
@@ -386,35 +435,54 @@ ${contentHtml}
             <p className="text-muted-foreground mt-1">{formatSize(file.size)} — {info.label}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{zipEntries.filter(e => !e.dir).length} files, {zipEntries.filter(e => e.dir).length} folders inside</p>
           </div>
-          <div className="w-full border border-border rounded-lg overflow-hidden bg-card max-h-[50vh] overflow-y-auto">
-            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-xs font-medium text-muted-foreground px-4 py-2 border-b border-border bg-muted">
-              <span>Name</span>
-              <span>Size</span>
+          {(docLoading || docHtml) && (
+            <div className="w-full border border-border rounded-lg bg-card p-4 max-h-[60vh] overflow-auto text-left">
+              {docLoading ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Rendering document preview...
+                </div>
+              ) : (
+                <div
+                  className="doc-preview prose prose-sm dark:prose-invert max-w-none [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_th]:bg-muted [&_.sheet-title]:mt-4 [&_.sheet-title]:font-bold [&_.slide]:border [&_.slide]:border-border [&_.slide]:rounded [&_.slide]:p-3 [&_.slide]:mb-3 [&_.slide-num]:text-xs [&_.slide-num]:text-muted-foreground [&_.slide-num]:mb-2"
+                  dangerouslySetInnerHTML={{ __html: docHtml! }}
+                />
+              )}
             </div>
-            {zipEntries.length === 0 ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading contents...
+          )}
+          <details className="w-full">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground select-none">
+              Browse archive contents ({zipEntries.filter(e => !e.dir).length} files)
+            </summary>
+            <div className="mt-2 w-full border border-border rounded-lg overflow-hidden bg-card max-h-[50vh] overflow-y-auto">
+              <div className="grid grid-cols-[1fr_auto] gap-x-4 text-xs font-medium text-muted-foreground px-4 py-2 border-b border-border bg-muted">
+                <span>Name</span>
+                <span>Size</span>
               </div>
-            ) : (
-              zipEntries.map((entry, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => !entry.dir && handleZipEntryClick(entry.name)}
-                  disabled={entry.dir}
-                  className="w-full grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50 text-left disabled:cursor-default disabled:hover:bg-transparent"
-                >
-                  <span className="truncate text-foreground">
-                    {entry.dir ? "📁 " : "📄 "}{entry.name}
-                  </span>
-                  <span className="text-muted-foreground text-xs whitespace-nowrap">
-                    {entry.dir ? "—" : formatSize(entry.size)}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">Click any file inside the archive to preview it.</p>
+              {zipEntries.length === 0 ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Reading contents...
+                </div>
+              ) : (
+                zipEntries.map((entry, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => !entry.dir && handleZipEntryClick(entry.name)}
+                    disabled={entry.dir}
+                    className="w-full grid grid-cols-[1fr_auto] gap-x-4 px-4 py-1.5 text-sm border-b border-border/50 last:border-0 hover:bg-muted/50 text-left disabled:cursor-default disabled:hover:bg-transparent"
+                  >
+                    <span className="truncate text-foreground">
+                      {entry.dir ? "📁 " : "📄 "}{entry.name}
+                    </span>
+                    <span className="text-muted-foreground text-xs whitespace-nowrap">
+                      {entry.dir ? "—" : formatSize(entry.size)}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Click any file inside the archive to preview it.</p>
+          </details>
           <a href={fileUrl} download={file.name}>
             <Button className="gap-2" size="lg">
               <Download className="w-5 h-5" />
