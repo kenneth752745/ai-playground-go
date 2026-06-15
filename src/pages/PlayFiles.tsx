@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen } from "lucide-react";
+import { Upload, FileIcon, X, AlertTriangle, CheckCircle, Loader2, Maximize, Download, Smartphone, Package, Monitor, Archive, Play, HardDrive, Music, Image, Film, FileText, Code, Table, Presentation, BookOpen, History, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import JSZip from "jszip";
@@ -49,6 +49,48 @@ const PlayFiles = () => {
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
   const [showApkConfirm, setShowApkConfirm] = useState(false);
+  const [uploads, setUploads] = useState<{ name: string; size: number; type: string; uploadedAt: number }[]>(() => {
+    try {
+      const raw = localStorage.getItem("playFiles.uploads");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showUploads, setShowUploads] = useState(false);
+
+  const saveUpload = useCallback((f: File) => {
+    setUploads((prev) => {
+      const next = [
+        { name: f.name, size: f.size, type: f.type, uploadedAt: Date.now() },
+        ...prev.filter((u) => !(u.name === f.name && u.size === f.size)),
+      ].slice(0, 50);
+      try {
+        localStorage.setItem("playFiles.uploads", JSON.stringify(next));
+      } catch {
+        // ignore quota errors
+      }
+      return next;
+    });
+  }, []);
+
+  const clearUploads = () => {
+    setUploads([]);
+    localStorage.removeItem("playFiles.uploads");
+    toast.success("Upload history cleared");
+  };
+
+  const removeUpload = (idx: number) => {
+    setUploads((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      try {
+        localStorage.setItem("playFiles.uploads", JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     // Clean up previous URL
@@ -100,10 +142,11 @@ const PlayFiles = () => {
             `✅ File approved! Size: ${formatSize(selectedFile.size)} — within the ${sizeLimitLabel} limit. Ready to download and preview.`
           );
           toast.success("File approved by AI");
+          saveUpload(selectedFile);
         }
       }
     }, stepDuration);
-  }, [fileUrl]);
+  }, [fileUrl, saveUpload]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -639,14 +682,63 @@ ${contentHtml}
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Play Files</h1>
-          <Button variant="outline" size="sm" onClick={() => navigate("/")}>
-            ← Back
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowUploads((v) => !v)}>
+              <History className="w-4 h-4" />
+              Your Uploads {uploads.length > 0 && `(${uploads.length})`}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/")}>
+              ← Back
+            </Button>
+          </div>
         </div>
 
         <p className="text-muted-foreground">
           Upload a file (max 1GB / 1000MB). The AI will verify the file size before running.
         </p>
+
+        {/* Uploads history */}
+        {showUploads && (
+          <Card className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-primary" />
+                <h2 className="font-semibold text-foreground">Your Uploads</h2>
+              </div>
+              {uploads.length > 0 && (
+                <Button variant="ghost" size="sm" className="gap-1 text-destructive hover:text-destructive" onClick={clearUploads}>
+                  <Trash2 className="w-4 h-4" />
+                  Clear all
+                </Button>
+              )}
+            </div>
+            {uploads.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No uploads yet. Files you upload will appear here.
+              </p>
+            ) : (
+              <ul className="space-y-2 max-h-80 overflow-auto">
+                {uploads.map((u, i) => (
+                  <li key={`${u.name}-${u.uploadedAt}`} className="flex items-center gap-3 p-2 rounded-md border border-border bg-muted/30">
+                    <FileIcon className="w-5 h-5 text-primary shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{u.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatSize(u.size)} · {new Date(u.uploadedAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeUpload(i)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="text-xs text-muted-foreground">
+              History only stores file info (name, size, date) on this device — not the file itself.
+            </p>
+          </Card>
+        )}
 
         {/* Upload area */}
         {status === "idle" && (
