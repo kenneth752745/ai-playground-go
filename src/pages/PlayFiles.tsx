@@ -192,11 +192,13 @@ const PlayFiles = () => {
     if (!zipFile) return;
 
     setZipPreviewLoading(true);
+    if (zipPreview?.url) URL.revokeObjectURL(zipPreview.url);
     setZipPreview({ name: entryName, kind: "text", content: "" });
 
     const ext = entryName.split('.').pop()?.toLowerCase() || '';
     const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"];
-    const textExts = ["txt", "md", "json", "xml", "csv", "js", "ts", "tsx", "jsx", "css", "html", "htm", "py", "java", "c", "cpp", "h", "yaml", "yml", "toml", "ini", "cfg", "log", "sh", "bat", "rs", "go", "rb", "php", "swift", "kt", "sql", "env", "gitignore"];
+    const htmlExts = ["html", "htm"];
+    const textExts = ["txt", "md", "json", "xml", "csv", "js", "ts", "tsx", "jsx", "css", "py", "java", "c", "cpp", "h", "yaml", "yml", "toml", "ini", "cfg", "log", "sh", "bat", "rs", "go", "rb", "php", "swift", "kt", "sql", "env", "gitignore"];
 
     try {
       if (imageExts.includes(ext)) {
@@ -204,6 +206,14 @@ const PlayFiles = () => {
         const mime = ext === "svg" ? "image/svg+xml" : `image/${ext === "jpg" ? "jpeg" : ext}`;
         const url = URL.createObjectURL(new Blob([blob], { type: mime }));
         setZipPreview({ name: entryName, kind: "image", content: "", url });
+      } else if (htmlExts.includes(ext)) {
+        const blob = await zipFile.async("blob");
+        const url = URL.createObjectURL(new Blob([blob], { type: "text/html" }));
+        setZipPreview({ name: entryName, kind: "html", content: "", url });
+      } else if (ext === "pdf") {
+        const blob = await zipFile.async("blob");
+        const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+        setZipPreview({ name: entryName, kind: "html", content: "", url });
       } else if (textExts.includes(ext) || !ext) {
         const text = await zipFile.async("string");
         setZipPreview({ name: entryName, kind: "text", content: text.slice(0, 200_000) });
