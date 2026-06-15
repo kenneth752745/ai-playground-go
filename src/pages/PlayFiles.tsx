@@ -49,6 +49,48 @@ const PlayFiles = () => {
   const [convertProgress, setConvertProgress] = useState(0);
   const [convertMessage, setConvertMessage] = useState("");
   const [showApkConfirm, setShowApkConfirm] = useState(false);
+  const [uploads, setUploads] = useState<{ name: string; size: number; type: string; uploadedAt: number }[]>(() => {
+    try {
+      const raw = localStorage.getItem("playFiles.uploads");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showUploads, setShowUploads] = useState(false);
+
+  const saveUpload = useCallback((f: File) => {
+    setUploads((prev) => {
+      const next = [
+        { name: f.name, size: f.size, type: f.type, uploadedAt: Date.now() },
+        ...prev.filter((u) => !(u.name === f.name && u.size === f.size)),
+      ].slice(0, 50);
+      try {
+        localStorage.setItem("playFiles.uploads", JSON.stringify(next));
+      } catch {
+        // ignore quota errors
+      }
+      return next;
+    });
+  }, []);
+
+  const clearUploads = () => {
+    setUploads([]);
+    localStorage.removeItem("playFiles.uploads");
+    toast.success("Upload history cleared");
+  };
+
+  const removeUpload = (idx: number) => {
+    setUploads((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      try {
+        localStorage.setItem("playFiles.uploads", JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     // Clean up previous URL
